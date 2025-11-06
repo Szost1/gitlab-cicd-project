@@ -19,12 +19,12 @@ build:
  extends:
    - .docker-in-docker
  script:
-  - docker build -t szostjuice:latest .
-  - docker save szostjuice:latest > szostjuice.tar
+  - docker build -t testjuice:latest .
+  - docker save testjuice:latest > testjuice.tar
  artifacts:
   when: always
   paths:
-   - szostjuice.tar   
+   - testjuice.tar   
 
 #dependency check (SCA)
 snyk:
@@ -74,8 +74,8 @@ zap:
  dependencies:
   - build
  script:
-   - docker load -i szostjuice.tar
-   - docker run -d -p 3000:3000 --network host szostjuice:latest
+   - docker load -i testjuice.tar
+   - docker run -d -p 3000:3000 --network host testjuice:latest
    - sleep 20 # waiting for the application to start
    - docker run --network host -v $PWD:/zap/wrk -t zaproxy/zap-stable zap-baseline.py -t http://localhost:3000 -r zap_report.html
  allow_failure:
@@ -101,8 +101,8 @@ trivy:
    - apk add --no-cache curl
    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
   script:
-   - docker load -i szostjuice.tar
-   - trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output trivy_report.json szostjuice:latest
+   - docker load -i testjuice.tar
+   - trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output trivy_report.json testjuice:latest
   artifacts:
    when: always
    paths: [trivy_report.json]
@@ -115,6 +115,6 @@ push:
   - build
  script:
   - echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-  - docker load -i szostjuice.tar
-  - docker tag szostjuice:latest szost/szostjuice:V1
-  - docker push szost/szostjuice:V2
+  - docker load -i testjuice.tar
+  - docker tag testjuice:latest szost/testjuice:V1
+  - docker push szost/testjuice:V2
